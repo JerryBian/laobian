@@ -38,3 +38,5 @@ document.addEventListener("DOMContentLoaded",
 window.addEventListener("resize", function() {
     putFooterAtBottom();
 });
+
+window.test = function () {};
