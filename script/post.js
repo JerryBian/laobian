@@ -1,11 +1,6 @@
 ﻿document.addEventListener("DOMContentLoaded",
     function() {
         hljs.initHighlightingOnLoad();
-        anchors.options = {
-            placement: 'right',
-            visible: 'hover'
-        };
-        anchors.add('.post-content h3, .post-content h4');
 
         try {
             var modal = document.querySelector("#imgModal");
