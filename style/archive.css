@@ -7693,10 +7693,6 @@ pre code {
   font-size: 0.875rem;
 }
 
-.list-group-item:last-child {
-  border: none;
-}
-
 .archive table tr td {
   padding-bottom: 0.25rem;
 }
