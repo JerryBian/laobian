@@ -26,13 +26,6 @@ blockquote p { margin-bottom: 0.6rem; }
 
 blockquote *:last-child { margin-bottom: 0; }
 
-a {
-    border-bottom-color: darkolivegreen;
-    border-bottom-style: dashed;
-    border-bottom-width: 1px;
-    padding-bottom: 2px;
-}
-
 pre { font-size: 92%; }
 
 img {
