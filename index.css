@@ -137,7 +137,7 @@ pre,
 code,
 kbd,
 samp {
-  font-family: Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: Monaco, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 1em;
 }
 
@@ -7434,7 +7434,7 @@ button.bg-dark:focus {
 }
 
 .text-monospace {
-  font-family: Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-family: Monaco, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace !important;
 }
 
 .text-justify {
