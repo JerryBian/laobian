@@ -1,0 +1,171 @@
+﻿@using Laobian.Share.Setting
+@using Microsoft.Extensions.Options
+@model IEnumerable<Laobian.Share.Blog.Model.BlogTag>
+@inject IOptions<AdminSetting> Setting
+<div>
+    <h3 class="text-start">
+        <button class="btn btn-primary" onclick="launchAddModal()">Add new tag</button>
+    </h3>
+    <table class="table caption-top">
+        <caption>Post tags: @Model.Count()</caption>
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Link</th>
+            <th scope="col">Operation</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var tag in Model)
+        {
+            <tr>
+                <th>@tag.Name</th>
+                <th>@tag.Link</th>
+                <th>
+                    <a href="javascript:;" onclick="launchUpdateModal('@tag.Link')">Update</a> &middot;
+                    <a href="javascript:;" onclick="deleteTag('@tag.Link')">Delete</a>
+                </th>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" tabindex="-1" id="updateModal" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Link: <span id="tagLink"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="modalBodyName" class="form-label">Tag Name</label>
+                    <input type="text" class="form-control" id="modalBodyName" placeholder="tag name">
+                </div>
+                <div class="mb-3">
+                    <label for="modalBodyDescription" class="form-label">Tag Description</label>
+                    <textarea class="form-control" id="modalBodyDescription" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="updateTag()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" id="addModal" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Add new tag</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="addModalBodyLink" class="form-label">Tag Link</label>
+                    <input type="text" class="form-control" id="addModalBodyLink" placeholder="tag link">
+                </div>
+                <div class="mb-3">
+                    <label for="addModalBodyName" class="form-label">Tag Name</label>
+                    <input type="text" class="form-control" id="addModalBodyName" placeholder="tag name">
+                </div>
+                <div class="mb-3">
+                    <label for="addModalBodyDescription" class="form-label">Tag Description</label>
+                    <textarea class="form-control" id="addModalBodyDescription" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="addTag()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        let updateModalDiv = document.querySelector('#updateModal');
+        let updateModal = new bootstrap.Modal(updateModalDiv, {});
+        let addModalDiv = document.querySelector('#addModal');
+        let addModal = new bootstrap.Modal(addModalDiv, {});
+
+        function deleteTag(link) {
+            fetch(`/blog/tag/${link}`,
+                    {
+                        method: 'DELETE'
+                    })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload(true);
+                    }
+                })
+                .catch(err => {});
+        }
+
+        function launchUpdateModal(link) {
+            fetch(`/blog/tag/${link}`)
+                .then(response => response.json())
+                .then(tag => {
+                    document.querySelector('#tagLink').innerHTML = tag.l;
+                    document.querySelector('#modalBodyName').value = tag.n;
+                    document.querySelector('#modalBodyDescription').value = tag.d;
+                    updateModal.show();
+                })
+                .catch(err => {});
+        }
+
+        function updateTag() {
+            var tag = {
+                l: document.querySelector('#tagLink').innerHTML,
+                n: document.querySelector('#modalBodyName').value,
+                d: document.querySelector('#modalBodyDescription').value
+            };
+
+            fetch('/blog/tag',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(tag)
+                    })
+                .then(response => {
+                    if (response.ok) {
+                        updateModal.hide();
+                        window.location.reload(true);
+                    }
+                })
+                .catch(err => {});
+        }
+
+        function launchAddModal() {
+            addModal.show();
+        }
+
+        function addTag() {
+            var tag = {
+                l: document.querySelector('#addModalBodyLink').value,
+                n: document.querySelector('#addModalBodyName').value,
+                d: document.querySelector('#addModalBodyDescription').value
+            };
+
+            fetch('/blog/tag',
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(tag)
+                    })
+                .then(response => {
+                    if (response.ok) {
+                        updateModal.hide();
+                        window.location.reload(true);
+                    }
+                })
+                .catch(err => {});
+        }
+    </script>
+}

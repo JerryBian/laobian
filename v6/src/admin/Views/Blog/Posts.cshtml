@@ -1,0 +1,154 @@
+﻿@using Laobian.Share.Setting
+@using Microsoft.Extensions.Options
+@model Laobian.Admin.Models.PostsViewModel
+@inject IOptions<AdminSetting> Setting
+<div>
+    <table class="table caption-top">
+        <caption>Total blog posts: @Model.Posts.Count()</caption>
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Title</th>
+            <th scope="col">Published</th>
+            <th scope="col">Access</th>
+            <th scope="col">Comments</th>
+            <th scope="col">Metadata</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var post in Model.Posts)
+        {
+            <tr>
+                <th>@post.GetPublishTimeString()</th>
+                <th>
+                    <a href="@Setting.Value.BlogRemoteEndpoint@post.GetFullLink()">@post.Metadata.Title</a>
+                </th>
+                <th>@post.IsPostPublished()</th>
+                <th>
+                    @post.GetAccessCountString()
+                </th>
+                <th>
+                    @post.GetCommentCount()
+                </th>
+                <th>
+                    <a href="javascript:;" onclick="launchMetadataModal('@post.Link')">Update Metadata</a>
+                </th>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" tabindex="-1" id="postMetadataModal" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Metadata: <span id="postLink"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="modalBodyTitle" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="modalBodyTitle" placeholder="post title">
+                </div>
+                <div class="mb-3">
+                    <label for="modalBodyExcerpt" class="form-label">Excerpt</label>
+                    <textarea class="form-control" id="modalBodyExcerpt" rows="3"></textarea>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="modalBodyIsPublished">
+                    <label class="form-check-label" for="modalBodyIsPublished">Is Published</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="modalBodyIsTopping">
+                    <label class="form-check-label" for="modalBodyIsTopping">Is Topping</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="modalBodyContainsMath">
+                    <label class="form-check-label" for="modalBodyContainsMath">Contains Math</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="modalBodyAllowComment">
+                    <label class="form-check-label" for="modalBodyAllowComment">Allow Comments</label>
+                </div>
+                <div class="mb-3">
+                    <label for="modalBodyPublishTime" class="form-label">Publish Time</label>
+                    <input type="datetime-local" class="form-control" id="modalBodyPublishTime">
+                </div>
+                @if (Model.Tags.Any())
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <div>
+                            @foreach (var tag in Model.Tags)
+                            {
+                                var id = Guid.NewGuid().ToString("N");
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="@id" value="@tag.Link">
+                                    <label class="form-check-label" for="@id">@tag.Name</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveMetadata()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        let modalDiv = document.querySelector('#postMetadataModal');
+        let modal = new bootstrap.Modal(modalDiv, {});
+
+        function launchMetadataModal(link) {
+            fetch(`/blog/post/${link}`)
+                .then(response => response.json())
+                .then(post => {
+                    document.querySelector('#postLink').innerHTML = post.l;
+                    document.querySelector('#modalBodyTitle').value = post.m.t;
+                    document.querySelector('#modalBodyExcerpt').value = post.m.e;
+                    document.querySelector('#modalBodyIsPublished').checked = post.m.ip;
+                    document.querySelector('#modalBodyIsTopping').checked = post.m.it;
+                    document.querySelector('#modalBodyContainsMath').checked = post.m.cm;
+                    document.querySelector('#modalBodyAllowComment').checked = post.m.a;
+                    document.querySelector('#modalBodyPublishTime').value = post.m.p;
+                    modal.show();
+                })
+                .catch(err => {});
+        }
+
+        function saveMetadata() {
+            var metadata = {
+                l: document.querySelector('#postLink').innerHTML,
+                t: document.querySelector('#modalBodyTitle').value,
+                e: document.querySelector('#modalBodyExcerpt').value,
+                ip: document.querySelector('#modalBodyIsPublished').checked,
+                it: document.querySelector('#modalBodyIsTopping').checked,
+                cm: document.querySelector('#modalBodyContainsMath').checked,
+                a: document.querySelector('#modalBodyAllowComment').checked,
+                p: document.querySelector('#modalBodyPublishTime').value
+            };
+
+            fetch('/blog/post/metadata',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(metadata)
+                    })
+                .then(response => {
+                    if (response.ok) {
+                        modal.hide();
+                        window.location.reload(true);
+                    }
+                })
+                .catch(err => {});
+        }
+    </script>
+}

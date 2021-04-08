@@ -1,48 +1,57 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>@ViewData["Title"] - Admin</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Admin</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+<body class="container-fluid h-100">
+<div class="row h-100">
+    <div class="col-2 h-100 bg-dark d-flex flex-column p-3 text-white">
+        <a href="/" class="fs-4 text-decoration-none mb-3 me-auto text-white">Admin</a>
+        <hr/>
+        <ul class="nav flex-column mb-auto">
+            <li>
+                <a href="/blog/posts" class="nav-link text-white">Blog > Posts</a>
+            </li>
+            <li>
+                <a href="/blog/tags" class="nav-link text-white">Blog > Tags</a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-white">Blog > Comments</a>
+            </li>
+        </ul>
+        <hr/>
+        <a href="/" class="fs-6 text-decoration-none mb-3 me-auto ms-auto text-white">Sign out</a>
     </div>
+    <div class="col-10 p-2">
+        <p class="text-end">
+            <button class="btn btn-info" onclick="forceReloadBlogData()">Force Reload Blog Data</button>
+        </p>
+        @RenderBody()
+    </div>
+</div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2021 - Admin - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+<script>
+    function forceReloadBlogData() {
+        fetch('/blog/reload',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: 'Request by Admin - Force Reload Blog Data button'
+                })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload(true);
+                }
+            });
+    }
+</script>
+@await RenderSectionAsync("Scripts", false)
 </body>
 </html>

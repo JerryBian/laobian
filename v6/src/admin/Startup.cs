@@ -1,14 +1,15 @@
+using Laobian.Share.Blog.Repository;
+using Laobian.Share.Command;
+using Laobian.Share.Converter;
+using Laobian.Share.HttpService;
+using Laobian.Share.Setting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Admin
+namespace Laobian.Admin
 {
     public class Startup
     {
@@ -22,20 +23,29 @@ namespace Admin
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.Configure<BlogSetting>(setting => setting.Setup(Configuration));
+            services.Configure<AdminSetting>(setting => setting.Setup(Configuration));
+
+            services.AddSingleton<ICommandClient, ProcessCommandClient>();
+            services.AddSingleton<IBlogReadonlyRepository, BlogPostRepository>();
+            services.AddSingleton<IBlogReadWriteRepository, BlogDbRepository>();
+
+            services.AddHttpClient<ApiHttpService>();
+            services.AddHttpClient<BlogHttpService>();
+            services.AddControllersWithViews().AddJsonOptions(config =>
+            {
+                var converter = new IsoDateTimeConverter();
+                config.JsonSerializerOptions.Converters.Add(converter);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
                 app.UseExceptionHandler("/Home/Error");
-            }
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -45,8 +55,8 @@ namespace Admin
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    "default",
+                    "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }
