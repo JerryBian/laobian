@@ -79,7 +79,7 @@
                 {
                     <div class="mb-3">
                         <label class="form-label">Tags</label>
-                        <div>
+                        <div id="tagsDiv">
                             @foreach (var tag in Model.Tags)
                             {
                                 var id = Guid.NewGuid().ToString("N");
@@ -117,13 +117,28 @@
                     document.querySelector('#modalBodyContainsMath').checked = post.m.cm;
                     document.querySelector('#modalBodyAllowComment').checked = post.m.a;
                     document.querySelector('#modalBodyPublishTime').value = post.m.p;
+
+                    let checkedBoxes = document.querySelectorAll('#tagsDiv input[type=checkbox]');
+                    for (let i = 0; i < checkedBoxes.length; i++) {
+                        for (const val of post.m.ta) {
+                            if (val === checkedBoxes[i].value) {
+                                checkedBoxes[i].checked = true;
+                            }
+                        }
+                    }
                     modal.show();
                 })
                 .catch(err => {});
         }
 
         function saveMetadata() {
-            var metadata = {
+            let tags = [];
+            let checkedBoxes = document.querySelectorAll('#tagsDiv input[type=checkbox]:checked');
+            for (let i = 0; i < checkedBoxes.length; i++) {
+                tags.push(checkedBoxes[i].value);
+            }
+
+            let metadata = {
                 l: document.querySelector('#postLink').innerHTML,
                 t: document.querySelector('#modalBodyTitle').value,
                 e: document.querySelector('#modalBodyExcerpt').value,
@@ -131,7 +146,8 @@
                 it: document.querySelector('#modalBodyIsTopping').checked,
                 cm: document.querySelector('#modalBodyContainsMath').checked,
                 a: document.querySelector('#modalBodyAllowComment').checked,
-                p: document.querySelector('#modalBodyPublishTime').value
+                p: document.querySelector('#modalBodyPublishTime').value,
+                ta: tags
             };
 
             fetch('/blog/post/metadata',

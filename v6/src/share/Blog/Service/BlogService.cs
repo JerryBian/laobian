@@ -107,7 +107,7 @@ namespace Laobian.Share.Blog.Service
                         post.Comment = new BlogComment {PostLink = post.Link};
                     }
 
-                    post.Tags = _allTags.Where(x => post.Metadata.Tags.ContainsIgnoreCase(x.Name)).ToList();
+                    post.Tags = _allTags.Where(x => post.Metadata.Tags.ContainsIgnoreCase(x.Link)).ToList();
                 }
 
                 return true;
@@ -126,15 +126,14 @@ namespace Laobian.Share.Blog.Service
                 _manualResetEventSlim.Reset();
                 try
                 {
-                    var allPostMetadata = _allPosts.Select(x => x.Metadata).ToList();
-                    var existingMetadata =
-                        allPostMetadata.FirstOrDefault(x => StringUtil.EqualsIgnoreCase(x.Link, metadata.Link));
-                    if (existingMetadata == null)
+                    var post = _allPosts.FirstOrDefault(x => StringUtil.EqualsIgnoreCase(x.Link, metadata.Link));
+                    if (post == null)
                     {
-                        _logger.LogError($"The target metadata does not exist. Post link = {metadata.Link}");
+                        _logger.LogError($"Failed to find post with link {metadata.Link}");
                         return false;
                     }
 
+                    var existingMetadata = post.Metadata;
                     existingMetadata.Excerpt = metadata.Excerpt;
                     existingMetadata.IsPublished = metadata.IsPublished;
                     existingMetadata.PublishTime = metadata.PublishTime;
@@ -144,6 +143,8 @@ namespace Laobian.Share.Blog.Service
                     existingMetadata.IsTopping = metadata.IsTopping;
                     existingMetadata.LastUpdateTime = DateTime.Now;
                     existingMetadata.Tags = metadata.Tags;
+
+                    post.Tags = _allTags.Where(x => post.Metadata.Tags.ContainsIgnoreCase(x.Link)).ToList();
                     return true;
                 }
                 finally
@@ -210,6 +211,11 @@ namespace Laobian.Share.Blog.Service
 
                     existingTag.Name = tag.Name;
                     existingTag.Description = tag.Description;
+
+                    foreach (var blogTag in _allPosts)
+                    {
+                        blogTag.Metadata.Tags = blogTag.Tags.Select(x => x.Link).ToList();
+                    }
                     return true;
                 }
                 finally
