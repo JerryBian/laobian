@@ -17,8 +17,11 @@ namespace Laobian.Blog
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment _env;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
+            _env = env;
             Configuration = configuration;
         }
 
@@ -44,6 +47,7 @@ namespace Laobian.Blog
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
                 {
                     options.Cookie.Name = sharedCookieName;
+                    options.Cookie.Domain = _env.IsDevelopment() ? "localhost" : ".laobian.me";
                 });
             services.AddControllersWithViews().AddJsonOptions(config =>
             {

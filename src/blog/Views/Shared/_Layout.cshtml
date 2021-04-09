@@ -30,6 +30,7 @@
 <main class="flex-shrink-0 container">
     <div class="row">
         <div class="col-sm-9">
+            TEST => @Context.User.Identity?.IsAuthenticated
             @RenderBody()
         </div>
         <div class="col-sm-3 d-none d-sm-none d-md-block">

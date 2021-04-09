@@ -20,8 +20,11 @@ namespace Laobian.Admin
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment _env;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
+            _env = env;
             Configuration = configuration;
         }
 
@@ -52,6 +55,7 @@ namespace Laobian.Admin
                     options.Cookie.HttpOnly = true;
                     options.LoginPath = new PathString("/login");
                     options.LogoutPath = new PathString("/logout");
+                    options.Cookie.Domain = _env.IsDevelopment() ? "localhost" : ".laobian.me";
                 });
             services.AddControllersWithViews(config =>
             {
