@@ -1,10 +1,17 @@
+using System;
+using System.IO;
 using Laobian.Share.Blog.Repository;
 using Laobian.Share.Command;
 using Laobian.Share.Converter;
 using Laobian.Share.HttpService;
 using Laobian.Share.Setting;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,7 +39,25 @@ namespace Laobian.Admin
 
             services.AddHttpClient<ApiHttpService>();
             services.AddHttpClient<BlogHttpService>();
-            services.AddControllersWithViews().AddJsonOptions(config =>
+
+            var dpFolder = Configuration.GetValue<string>("DATA_PROTECTION_KEY_PATH");
+            var sharedCookieName = Configuration.GetValue<string>("SHARED_COOKIE_NAME");
+            Directory.CreateDirectory(dpFolder);
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(dpFolder)).SetApplicationName("LAOBIAN");
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+                {
+                    options.Cookie.Name = sharedCookieName;
+                    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+                    options.Cookie.HttpOnly = true;
+                    options.LoginPath = new PathString("/login");
+                    options.LogoutPath = new PathString("/logout");
+                });
+            services.AddControllersWithViews(config =>
+            {
+                var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+                config.Filters.Add(new AuthorizeFilter(policy));
+            }).AddJsonOptions(config =>
             {
                 var converter = new IsoDateTimeConverter();
                 config.JsonSerializerOptions.Converters.Add(converter);
@@ -50,6 +75,7 @@ namespace Laobian.Admin
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

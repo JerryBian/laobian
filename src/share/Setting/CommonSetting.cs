@@ -45,6 +45,15 @@ namespace Laobian.Share.Setting
         [SettingConfig("ENDPOINT_REMOTE_ADMIN")]
         public string AdminRemoteEndpoint { get; set; }
 
+        [SettingConfig("DATA_PROTECTION_KEY_PATH", IsRequired = true)]
+        public string DataProtectionKeyPath { get; set; }
+
+        [SettingConfig("DATA_PROTECTION_APP_NAME", DefaultValue = "LAOBIAN")]
+        public string DataProtectionAppName { get; set; }
+
+        [SettingConfig("SHARED_COOKIE_NAME", IsRequired = true)]
+        public string SharedCookieName { get; set; }
+
         public void Setup(IConfiguration config)
         {
             foreach (var propertyInfo in GetType().GetProperties())

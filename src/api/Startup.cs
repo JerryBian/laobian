@@ -1,10 +1,13 @@
+using System.IO;
 using Laobian.Api.HostedServices;
 using Laobian.Share.Blog.Repository;
 using Laobian.Share.Blog.Service;
 using Laobian.Share.Command;
 using Laobian.Share.Converter;
 using Laobian.Share.Setting;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,7 +37,15 @@ namespace Laobian.Api
             services.AddSingleton<IBlogReadWriteRepository, BlogDbRepository>();
 
             services.AddHostedService<BlogHostedService>();
-
+            var dpFolder = Configuration.GetValue<string>("DATA_PROTECTION_KEY_PATH");
+            var sharedCookieName = Configuration.GetValue<string>("SHARED_COOKIE_NAME");
+            Directory.CreateDirectory(dpFolder);
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(dpFolder)).SetApplicationName("LAOBIAN");
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+                {
+                    options.Cookie.Name = sharedCookieName;
+                });
             services.AddControllers().AddJsonOptions(config =>
             {
                 var converter = new IsoDateTimeConverter();
@@ -55,6 +66,7 @@ namespace Laobian.Api
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

@@ -1,0 +1,21 @@
+﻿<div class="d-flex align-items-center justify-content-center">
+    <div class="w-50">
+        <form asp-controller="Account" asp-action="Login" asp-route-r="/" method="post" role="form">
+            <div class="form-group">
+                <label for="userName">User Name</label>
+                <div>
+                    <input type="text" name="userName" class="form-control" id="userName" placeholder="User Name" autocomplete="off" autofocus required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div>
+                    <input type="password" name="password" class="form-control" id="password" placeholder="Password" autocomplete="off" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-secondary btn-block btn-lg">Login</button>
+            </div>
+        </form>
+    </div>
+</div>
