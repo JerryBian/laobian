@@ -46,9 +46,9 @@ namespace Laobian.Share.Blog.Repository
             commands.Add(
                 $"git clone -b {_setting.GitHubReadWriteRepoBranch} --single-branch {repoUrl} {_setting.GitHubReadWriteRepoLocalDir}");
             commands.Add($"cd {_setting.GitHubReadWriteRepoLocalDir}");
-            commands.Add($"git config --local user.name \"{_setting.GitHubReadWriteRepoCommitUser}\"");
-            commands.Add($"git config --local user.email \"{_setting.GitHubReadWriteRepoCommitEmail}\"");
-            var command = string.Join(" && ", commands);
+            commands.Add($"git config --local user.name '{_setting.GitHubReadWriteRepoCommitUser}'");
+            commands.Add($"git config --local user.email '{_setting.GitHubReadWriteRepoCommitEmail}'");
+            var command = $"\"{string.Join(" && ", commands)}\"";
             var output = await _commandClient.RunAsync(command);
             _logger.LogInformation($"cmd: {command}{Environment.NewLine}Output: {output}");
         }
@@ -70,9 +70,9 @@ namespace Laobian.Share.Blog.Repository
             var commands = new List<string>();
             commands.Add($"cd {_setting.GitHubReadWriteRepoLocalDir}");
             commands.Add("git add .");
-            commands.Add($"git commit -m \"{commitMessage}\"");
+            commands.Add($"git commit -m '{commitMessage}'");
             commands.Add("git push");
-            var command = string.Join(" && ", commands);
+            var command = $"\"{string.Join(" && ", commands)}\"";
             var output = await _commandClient.RunAsync(command);
             _logger.LogInformation($"cmd: {command}{Environment.NewLine}Output: {output}");
         }
