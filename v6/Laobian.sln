@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Admin", "src\admin\Admin.cs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blog", "src\blog\Blog.csproj", "{8EB80E2E-1A89-4FED-B0D7-93FF3D6D0206}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\Api\Api.csproj", "{CB2ADB68-79A5-4F94-AB16-475009DC365F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\api\Api.csproj", "{CB2ADB68-79A5-4F94-AB16-475009DC365F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
