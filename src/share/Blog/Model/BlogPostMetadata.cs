@@ -1,47 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Text.Json.Serialization;
 
 namespace Laobian.Share.Blog.Model
 {
-    internal class BlogPostMetadata
+    public class BlogPostMetadata
     {
-        private int _accessCount;
+        [JsonPropertyName("l")] public string Link { get; set; }
 
-        public BlogPostMetadata()
-        {
-            _accessCount = 1;
-        }
+        [JsonPropertyName("t")] public string Title { get; set; }
 
-        public string Link { get; set; } = Guid.NewGuid().ToString("N");
+        [JsonPropertyName("c")] public DateTime CreateTime { get; set; } = DateTime.Now;
 
-        public string Title { get; set; } = Guid.NewGuid().ToString("N");
+        [JsonPropertyName("p")] public DateTime PublishTime { get; set; } = DateTime.Now;
 
-        public DateTime CreateTime { get; set; } = DateTime.Now;
+        [JsonPropertyName("lu")] public DateTime LastUpdateTime { get; set; } = DateTime.Now;
 
-        public DateTime PublishTime { get; set; } = DateTime.Now;
+        [JsonPropertyName("ip")] public bool IsPublished { get; set; }
 
-        public DateTime LastUpdateTime { get; set; } = DateTime.Now;
+        [JsonPropertyName("it")] public bool IsTopping { get; set; }
 
-        public bool IsDraft { get; set; } = true;
+        [JsonPropertyName("cm")] public bool ContainsMath { get; set; }
 
-        public bool IsTopping { get; set; } = false;
+        [JsonPropertyName("a")] public bool AllowComment { get; set; }
 
-        public bool ContainsMath { get; set; } = false;
+        [JsonPropertyName("e")] public string Excerpt { get; set; }
 
-        public List<string> Category { get; set; } = new List<string>();
-
-        public List<string> Tag { get; set; } = new List<string>();
-
-        public int AccessCount
-        {
-            get => _accessCount;
-            set => _accessCount = value;
-        }
-
-        public void IncrementAccessCount()
-        {
-            Interlocked.Increment(ref _accessCount);
-        }
+        [JsonPropertyName("ta")] public List<string> Tags { get; set; } = new List<string>();
     }
 }

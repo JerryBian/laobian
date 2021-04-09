@@ -1,69 +1,51 @@
-﻿using Laobian.Blog.Models;
-using Laobian.Share.Blog;
-using Laobian.Share.Cache;
+﻿using System.Threading.Tasks;
+using Laobian.Blog.Cache;
+using Laobian.Share.HttpService;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Laobian.Blog.Controllers
 {
     public class PostController : Controller
     {
-        private readonly IBlogService _blogService;
+        private readonly ApiHttpService _apiHttpService;
         private readonly ICacheClient _cacheClient;
+        private readonly ILogger<PostController> _logger;
 
-        public PostController(IBlogService blogService, ICacheClient cacheClient)
+        public PostController(ICacheClient cacheClient, ApiHttpService apiHttpService, ILogger<PostController> logger)
         {
+            _logger = logger;
             _cacheClient = cacheClient;
-            _blogService = blogService;
+            _apiHttpService = apiHttpService;
         }
 
-        [Route("{year:int}/{month:int}/{link}.html")]
-        public IActionResult Index(int year, int month, string link)
+        [Route("{year}/{month}/{url}.html")]
+        public async Task<IActionResult> Index([FromRoute] int year, [FromRoute] int month, [FromRoute] string url)
         {
-            var model = _cacheClient.GetOrCreate(
-                CacheKey.Build(nameof(PostController), nameof(Index), year, month, link,
-                    !User.Identity.IsAuthenticated),
-                () =>
+            var viewModel = await _cacheClient.GetOrCreateAsync(
+                CacheKeyBuilder.Build(nameof(PostController), nameof(Index), year, month, url),
+                async () =>
                 {
-                    var post = _blogService.GetPost(year, month, link, !User.Identity.IsAuthenticated);
-                    if (post == null)
+                    var post = await _apiHttpService.GetPostAsync(url);
+                    if (post.Metadata.PublishTime.Year != year || post.Metadata.PublishTime.Month != month)
                     {
+                        _logger.LogWarning(
+                            $"Find post with url={url}, but either year={year} or month={month} is failed to match.");
                         return null;
                     }
 
-                    var viewModel = new PostViewModel {Post = post};
-                    var posts = _blogService.GetPosts(!User.Identity.IsAuthenticated);
-                    var postIndex = posts.IndexOf(post);
-                    var nextPostIndex = postIndex - 1;
-                    if (nextPostIndex >= 0)
-                    {
-                        viewModel.NextPost = posts[nextPostIndex];
-                    }
-
-                    var prevPostIndex = postIndex + 1;
-                    if (prevPostIndex < posts.Count)
-                    {
-                        viewModel.PrevPost = posts[prevPostIndex];
-                    }
-
-                    return viewModel;
+                    return post;
                 });
 
-            if (model == null)
+            if (viewModel == null)
             {
                 return NotFound();
             }
 
-            if (!model.Post.IsPublic)
-            {
-                ViewData[ViewDataConstant.VisibleToSearchEngine] = false;
-            }
-
-            model.Post.NewAccess();
-            ViewData[ViewDataConstant.Canonical] = model.Post.FullUrlWithBase;
-            ViewData[ViewDataConstant.Title] = model.Post.Title;
-            ViewData[ViewDataConstant.Description] = model.Post.HeadDescription;
-
-            return View(model);
+#pragma warning disable 4014
+            _apiHttpService.PostNewAccessAsync(url); // No need to wait
+#pragma warning restore 4014
+            return View(viewModel);
         }
     }
 }

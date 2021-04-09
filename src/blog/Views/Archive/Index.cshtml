@@ -1,67 +1,30 @@
-﻿@using Laobian.Share.Helper
-@model IEnumerable<BlogArchive>
-
-<div class="archive">
-    <div class="mb-4">
-        @foreach (var item in Model)
-        {
-            <a class="btn btn-light archive-link" href="@item.GetRelativeLink()">
-                @item.Title <span class="badge badge-info">@HumanHelper.DisplayInt(item.Posts.Count)</span>
-            </a>
-        }
+﻿@using Laobian.Share.Util
+@model List<Laobian.Blog.Models.ArchiveViewModel>
+    <div class="text-center">
+        <h1 class="display-4">List of Archives</h1>
+        <p>We have @Model.Count years posts, totally @Model.SelectMany(x=>x.Posts).Count()</p>
     </div>
-
-    <div>
-        @foreach (var item in Model)
-        {
-            <h3 id="@item.Year">
-                <span>@item.Title (@item.Posts.Count)</span>
-            </h3>
-            <table>
-                @foreach (var post in item.Posts)
-                {
-                    <tr>
-                        <td>
-                            <span class="text-muted post-meta">@post.PublishTime.ToDate()</span>
-                        </td>
-
-                        <td>
-                            <a href="@post.FullUrl">
-                                <span>@post.Title</span>
-                            </a>
-                        </td>
-                    </tr>
-                }
-            </table>
-        }
-    </div>
+<div class="accordion accordion-flush">
+    @foreach (var item in Model)
+    {
+        var headerId = StringUtil.GenerateRandom(10);
+        var bsTargetId = StringUtil.GenerateRandom(10);
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="@headerId">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@bsTargetId" aria-expanded="false" aria-controls="@bsTargetId">
+                    @item.DateKey nian
+                </button>
+            </h2>
+            <div id="@bsTargetId" class="accordion-collapse collapse" aria-labelledby="@headerId">
+                <div class="accordion-body">
+                    <ul>
+                        @foreach (var post in item.Posts)
+                        {
+                            <li><a href="@post.GetFullLink()">@post.Metadata.Title</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
 </div>
-
-@section style{
-    <link rel="stylesheet"
-          href="~/dist/archive.min.css"
-          asp-fallback-href="https://jerrybian.github.io/blog.laobian.me/archive.min.css"
-          asp-fallback-test-class="sr-only"
-          asp-fallback-test-property="position"
-          asp-fallback-test-value="absolute"
-          asp-append-version="true" />
-}
-
-@section script{
-    <script src="~/dist/archive.min.js"
-            asp-fallback-src="https://jerrybian.github.io/blog.laobian.me/archive.min.js"
-            asp-fallback-test="window.test"
-            asp-append-version="true">
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded",
-            function () {
-                anchors.options = {
-                    placement: 'right',
-                    visible: 'hover',
-                    base: '/archive'
-                };
-                anchors.add('.archive h3');
-            });
-    </script>
-}

@@ -1,121 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Laobian.Blog.Cache;
 using Laobian.Blog.Models;
-using Laobian.Share;
-using Laobian.Share.Blog;
-using Laobian.Share.Cache;
 using Laobian.Share.Extension;
-using Laobian.Share.Helper;
+using Laobian.Share.HttpService;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Laobian.Blog.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IBlogService _blogService;
+        private readonly ApiHttpService _apiHttpService;
         private readonly ICacheClient _cacheClient;
+        private readonly ILogger<HomeController> _logger;
 
-        public HomeController(IBlogService blogService, ICacheClient cacheClient)
+        public HomeController(ICacheClient cacheClient, ILogger<HomeController> logger,
+            ApiHttpService apiHttpService)
         {
-            _blogService = blogService;
+            _logger = logger;
             _cacheClient = cacheClient;
+            _apiHttpService = apiHttpService;
         }
 
-        public IActionResult Index([FromQuery] int p)
+        public async Task<IActionResult> Index([FromQuery] int p)
         {
-            var viewModel = _cacheClient.GetOrCreate(
-                $"{CacheKey.Build(nameof(HomeController), nameof(Index), p, !User.Identity.IsAuthenticated)}",
-                () =>
+            var viewModel = await _cacheClient.GetOrCreateAsync(
+                CacheKeyBuilder.Build(nameof(HomeController), nameof(Index), p), async () =>
                 {
-                    var posts = _blogService.GetPosts(!User.Identity.IsAuthenticated);
-                    var model = new PagedPostViewModel(p, posts.Count)
+                    var posts = await _apiHttpService.GetPostsAsync();
+                    posts = posts.Where(x => x.IsPostPublished()).OrderByDescending(x => x.Metadata.PublishTime)
+                        .ToList();
+                    var model = new PagedPostIndexViewModel(p, posts.Count(), 8) {Url = Request.Path};
+                    foreach (var post in posts.ToPaged(8, model.CurrentPage))
                     {
-                        Url = Request.Path
-                    };
+                        var postIndexModel = new PostIndexViewModel
+                        {
+                            Link = post.GetFullLink(), PublishTime = post.GetPublishTimeString(),
+                            Title = post.Metadata.Title,
+                            Tags = post.Tags,
+                            Access = post.GetAccessCountString(),
+                            Comments = post.GetCommentCount(),
+                            Excerpt = post.GetExcerpt()
+                        };
 
-                    foreach (var blogPost in posts.ToPaged(Global.Config.Blog.PostsPerPage, model.CurrentPage))
-                    {
-                        model.Posts.Add(blogPost);
+                        model.Posts.Add(postIndexModel);
                     }
 
                     return model;
                 });
 
-            if (viewModel.CurrentPage > 1)
-            {
-                ViewData[ViewDataConstant.Title] = $"第{viewModel.CurrentPage}页";
-                ViewData[ViewDataConstant.VisibleToSearchEngine] = false;
-            }
-
-            ViewData[ViewDataConstant.Canonical] = "/";
             return View(viewModel);
         }
 
-        [Route("/sitemap.xml")]
-        public IActionResult SiteMap()
+        public IActionResult Privacy()
         {
-            var xml = _cacheClient.GetOrCreate(
-                $"{CacheKey.Build(nameof(HomeController), nameof(SiteMap))}",
-                () =>
-                {
-                    var posts = _blogService.GetPosts();
-                    var urlSet = new SiteMapUrlSet();
-                    var urls = new List<SiteMapUrl>
-                    {
-                        new SiteMapUrl
-                        {
-                            Loc = Global.Config.Blog.BlogAddress,
-                            ChangeFreq = "weekly",
-                            LastMod = DateTime.Now.ToDate(),
-                            Priority = 1.0
-                        },
-                        new SiteMapUrl
-                        {
-                            Loc = UrlHelper.Combine(Global.Config.Blog.BlogAddress, "about/"),
-                            ChangeFreq = "monthly",
-                            LastMod = DateTime.Now.ToDate(),
-                            Priority = 0.9
-                        },
-                        new SiteMapUrl
-                        {
-                            Loc = UrlHelper.Combine(Global.Config.Blog.BlogAddress, "archive/"),
-                            ChangeFreq = "weekly",
-                            LastMod = DateTime.Now.ToDate(),
-                            Priority = 0.8
-                        },
-                        new SiteMapUrl
-                        {
-                            Loc = UrlHelper.Combine(Global.Config.Blog.BlogAddress, "category/"),
-                            ChangeFreq = "weekly",
-                            LastMod = DateTime.Now.ToDate(),
-                            Priority = 0.7
-                        },
-                        new SiteMapUrl
-                        {
-                            Loc = UrlHelper.Combine(Global.Config.Blog.BlogAddress, "tag/"),
-                            ChangeFreq = "weekly",
-                            LastMod = DateTime.Now.ToDate(),
-                            Priority = 0.6
-                        }
-                    };
-
-                    foreach (var publishedPost in posts)
-                    {
-                        urls.Add(new SiteMapUrl
-                        {
-                            Loc = publishedPost.FullUrlWithBase,
-                            ChangeFreq = "daily",
-                            LastMod = publishedPost.PublishTime.ToDate(),
-                            Priority = 0.5
-                        });
-                    }
-
-                    urlSet.Urls = urls;
-                    return SerializeHelper.ToXml(urlSet, ns: "http://www.sitemaps.org/schemas/sitemap/0.9");
-                });
-
-            return Content(xml, "text/xml", Encoding.UTF8);
+            return View();
         }
+
+        //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        //public IActionResult Error()
+        //{
+        //    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        //}
     }
 }

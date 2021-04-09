@@ -1,55 +1,50 @@
-﻿using Laobian.Blog.Models;
-using Laobian.Share.Blog;
-using Laobian.Share.Cache;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Laobian.Blog.Cache;
+using Laobian.Blog.Models;
+using Laobian.Share.HttpService;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Laobian.Blog.Controllers
 {
     public class ArchiveController : Controller
     {
-        private readonly IBlogService _blogService;
+        private readonly ApiHttpService _apiHttpService;
         private readonly ICacheClient _cacheClient;
+        private readonly ILogger<ArchiveController> _logger;
 
-        public ArchiveController(ICacheClient cacheClient, IBlogService blogService)
+        public ArchiveController(ICacheClient cacheClient, ApiHttpService apiHttpService, ILogger<ArchiveController> logger)
         {
+            _logger = logger;
             _cacheClient = cacheClient;
-            _blogService = blogService;
+            _apiHttpService = apiHttpService;
         }
 
-        [Route("/category")]
-        public IActionResult Category()
+        public async Task<IActionResult> Index()
         {
-            var model = _cacheClient.GetOrCreate(
-                CacheKey.Build(nameof(ArchiveController), nameof(Category), !User.Identity.IsAuthenticated),
-                () => _blogService.GetCategories(!User.Identity.IsAuthenticated));
-            ViewData[ViewDataConstant.Title] = "分类";
-            ViewData[ViewDataConstant.Canonical] = "/category/";
-            ViewData[ViewDataConstant.Description] = "所有文章以分类的形式展现...";
-            return View("Category", model);
-        }
+            var viewModel = await _cacheClient.GetOrCreateAsync(
+                CacheKeyBuilder.Build(nameof(ArchiveController), nameof(Index)),
+                async () =>
+                {
+                    var posts = await _apiHttpService.GetPostsAsync();
+                    var groupedPosts = posts.GroupBy(x => x.Metadata.PublishTime.ToString("yyyy"))
+                        .OrderByDescending(x => x.Key);
+                    var result = new List<ArchiveViewModel>();
+                    foreach (var groupedPost in groupedPosts)
+                    {
+                        result.Add(new ArchiveViewModel
+                        {
+                            DateKey = groupedPost.Key,
+                            Posts = groupedPost.ToList()
+                        });
+                    }
 
-        [Route("/tag")]
-        public IActionResult Tag()
-        {
-            var model = _cacheClient.GetOrCreate(
-                CacheKey.Build(nameof(ArchiveController), nameof(Tag), !User.Identity.IsAuthenticated),
-                () => _blogService.GetTags(!User.Identity.IsAuthenticated));
-            ViewData[ViewDataConstant.Title] = "标签";
-            ViewData[ViewDataConstant.Canonical] = "/tag/";
-            ViewData[ViewDataConstant.Description] = "所有文章以标签归类的形式展现...";
-            return View("Tag", model);
-        }
-
-        [Route("/archive")]
-        public IActionResult Date()
-        {
-            var model = _cacheClient.GetOrCreate(
-                CacheKey.Build(nameof(ArchiveController), nameof(Date), !User.Identity.IsAuthenticated),
-                () => _blogService.GetArchives(!User.Identity.IsAuthenticated));
-            ViewData[ViewDataConstant.Title] = "存档";
-            ViewData[ViewDataConstant.Canonical] = "/archive/";
-            ViewData[ViewDataConstant.Description] = "所有文章以发表日期归类的形式展现...";
-            return View("Index", model);
+                    return result;
+                });
+            return View(viewModel);
         }
     }
 }

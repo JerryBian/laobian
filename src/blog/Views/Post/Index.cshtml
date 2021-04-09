@@ -1,109 +1,79 @@
-﻿@model PostViewModel
+﻿@model Laobian.Share.Blog.Model.BlogPost
+<div>
+    <h2>
+        <a href="@Model.GetFullLink()">@Model.Metadata.Title</a>
+    </h2>
+    <div class="bg-light p-2">
+        <i class="bi bi-calendar-date"></i> <a href="#">@Model.GetPublishTimeString()</a>
+        <i class="bi bi-tags"></i>
+        @foreach (var tag in Model.Tags)
+        {
+            <a href="@tag.Link">@tag.Name</a>
+        }
+        <i class="bi bi-eye"></i> @Model.GetAccessCountString() 次阅读
+        <i class="bi bi-chat-square-text"></i> @Model.GetCommentCount() 次评论
 
-<article class="post">
-    <div class="text-muted d-sm-block post-meta">@Html.Raw(Model.Post.GetMetadataHtml())</div>
-    <div class="post-title">
-        @Model.Post.Title
-        @if (Model.Post.IsTopping)
-        {
-            <span class="badge badge-success">置顶</span>
-        }
-        @if (!Model.Post.IsPublic)
-        {
-            <span class="badge badge-warning">
-                未发布
-            </span>
-        }
     </div>
+    <article>
+        @Html.Raw(Model.GetHtmlContent())
+    </article>
+</div>
 
-    <div class="mt-2 mb-4 post-content">
-        @Html.Raw(Model.Post.ContentHtml)
-        <p class="text-muted">（本文完）</p>
-    </div>
-</article>
-
-<div class="alert alert-warning post-alert" role="alert">
-    <ul>
-        @{
-            var html = Model.Post.CategoryAndTagHtml;
-            if (!string.IsNullOrEmpty(html))
-            {
-                <li>@Html.Raw(html)</li>
-            }
-        }
-
-        @if (Model.PrevPost != null)
+<div>
+    <p>@Model.GetCommentCount() 次评论 </p>
+    <hr/>
+    <ul class="list-group list-group-flush">
+        @for (var i = 0; i < 10; i++)
         {
-            <li>前一篇：<a href="@Model.PrevPost.FullUrl">@Model.PrevPost.Title</a></li>
+            <li class="list-group-item d-flex">
+                <div style="width: 100px; height: auto;" class="mx-3 d-flex flex-column justify-content-start align-items-center d-none d-sm-block">
+                    <div>
+                        <img src="https://discourse-cdn.codinghorror.com/user_avatar/discourse.codinghorror.com/chx1975/45/76610_2.png" alt="">
+                    </div>
+                    <div>
+                        <small>192.168.2.243</small>
+                    </div>
+                </div>
+                <div>
+                    <header class="d-flex">
+                        <span>Joe Duff</span>
+                        <span class="ms-auto">2020-02-03 14:24:21</span>
+                    </header>
+                    <article>
+                        You mentioned you want a truly powerful system but I am surprised you don’t go for AMD Ryzen processor, wouldn’t it gives u more bang for the bucks? I got a Ryzen 2700 build (also SFF) about 2 years ago, then few months back just build a Ryzen 3900 for 12 cores/24 threads, very happy with it. If I am not wrong for same # of cores Ryzen has lower TDP as well which make cooling, esp SFF build, easier. Just my experience with Ryzen so far … no regret :slight_smile:
+                    </article>
+                    <footer class="d-flex justify-content-start">
+                        <div class="me-3">
+                            <i class="bi bi-reply"></i> <a href="#">回复</a>
+                        </div>
+                        <div>
+                            <i class="bi bi-chat-square-quote"></i> <a href="#">引用</a>
+                        </div>
+                    </footer>
+                </div>
+            </li>
         }
-
-        @if (Model.NextPost != null)
-        {
-            <li>后一篇：<a href="@Model.NextPost.FullUrl">@Model.NextPost.Title</a></li>
-        }
-        <li>
-            文章的留言，请发送电子邮件至
-            <a href="mailto:@Global.Config.Common.AdminEmail?subject=留言 - @Model.Post.Title&body=Good job！">
-                @Global.Config.Common.AdminEmail
-            </a>
-        </li>
-        <li>最后更新于：<span title="@Model.Post.LastUpdateTime.ToChinaDateAndTime()">@Model.Post.LastUpdateTimeString</span></li>
     </ul>
+    <div>
+        <form class="row g-3">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" placeholder="" autocomplete="off">
+            </div>
+            <div class="col-md-6">
+                <label for="emailAddr" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="emailAddr" placeholder="name@example.com" autocomplete="off">
+            </div>
+            <div class="col-12">
+                <label for="comment" class="form-label">Example textarea</label>
+                <textarea class="form-control" id="comment" rows="3"></textarea>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Sign in</button>
+            </div>
+        </form>
+        <article>
+            Preview...
+        </article>
+    </div>
 </div>
-
-<div id="imgModal" class="modal">
-    <span id="modal-close">&times;</span>
-    <img id="modal-content">
-    <div id="modal-caption"></div>
-</div>
-
-
-@section script{
-    @if (Model.Post.ContainsMath)
-    {
-        <script>
-            MathJax = {
-                tex: {
-                    inlineMath: [['$', '$'], ['\\(', '\\)']]
-                },
-                svg: {
-                    fontCache: 'global'
-                }
-            };
-        </script>
-        <script src="~/dist/post-mathjax.min.js"
-                asp-fallback-src="https://jerrybian.github.io/blog.laobian.me/post-mathjax.min.js"
-                asp-fallback-test="window.test"
-                asp-append-version="true">
-        </script>
-    }
-    else
-    {
-        <script src="~/dist/post.min.js"
-                asp-fallback-src="https://jerrybian.github.io/blog.laobian.me/post.min.js"
-                asp-fallback-test="window.test"
-                asp-append-version="true">
-        </script>
-    }
-    <script>
-        document.addEventListener("DOMContentLoaded",
-            function () {
-                anchors.options = {
-                    placement: 'right',
-                    visible: 'hover',
-                    base: '@Model.Post.FullUrl'
-                };
-                anchors.add('.post-content h3, .post-content h4');
-            });
-    </script>
-}
-
-@section style{
-    <link rel="stylesheet"
-          href="~/dist/post.min.css"
-          asp-fallback-href="https://jerrybian.github.io/blog.laobian.me/post.min.css"
-          asp-fallback-test-class="sr-only"
-          asp-fallback-test-property="position"
-          asp-fallback-test-value="absolute"
-          asp-append-version="true" />
-}
