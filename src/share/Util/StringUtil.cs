@@ -18,7 +18,7 @@ namespace Laobian.Share.Util
         {
             var path = Path.GetRandomFileName();
             path = path.Replace(".", "");
-            return "r" + path.Substring(0, Math.Min(length-1, path.Length-1));
+            return "r" + path.Substring(0, Math.Min(length - 1, path.Length - 1));
         }
     }
 }

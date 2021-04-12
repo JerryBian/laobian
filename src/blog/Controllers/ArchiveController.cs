@@ -6,7 +6,6 @@ using Laobian.Blog.Models;
 using Laobian.Share.HttpService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Laobian.Blog.Controllers
 {
@@ -16,7 +15,8 @@ namespace Laobian.Blog.Controllers
         private readonly ICacheClient _cacheClient;
         private readonly ILogger<ArchiveController> _logger;
 
-        public ArchiveController(ICacheClient cacheClient, ApiHttpService apiHttpService, ILogger<ArchiveController> logger)
+        public ArchiveController(ICacheClient cacheClient, ApiHttpService apiHttpService,
+            ILogger<ArchiveController> logger)
         {
             _logger = logger;
             _cacheClient = cacheClient;

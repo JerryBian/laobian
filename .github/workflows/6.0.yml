@@ -1,8 +1,8 @@
-name: branch-6.0
+name: branch-4.4
 
 on:
   push:
-    branches: [ 6.0 ]
+    branches: [ 4.4 ]
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.5
+        dotnet-version: 3.1.302
     - name: Install dependencies
       run: dotnet restore
     - name: Build
@@ -27,6 +27,26 @@ jobs:
         BRANCH: gh-pages # The branch the action should deploy to.
         FOLDER: src/blog/wwwroot/dist # The folder the action should deploy.
         SINGLE_COMMIT: false
+    - name: Publish binary
+      run: dotnet publish ./src/blog/Laobian.Blog.csproj -p:PublishTrimmed=true -p:PublishSingleFile=true -c Release -r linux-x64 -o publish --self-contained
+    - name: clean up build binary
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          rm -rf /tmp/blog-stage 2> /dev/null
+    - name: copy binary to server
+      uses: garygrossgarten/github-action-scp@release
+      with:
+        local: publish
+        remote: /tmp/blog-stage
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
     - name: deploy server
       uses: appleboy/ssh-action@master
       with:
@@ -35,4 +55,4 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          sh /ga/deploy-laobian.sh stage
+          sh /ga/deploy-blog.sh stage

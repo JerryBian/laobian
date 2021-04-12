@@ -1,9 +1,9 @@
 ﻿@using Laobian.Share.Util
 @model List<Laobian.Blog.Models.ArchiveViewModel>
-    <div class="text-center">
-        <h1 class="display-4">List of Archives</h1>
-        <p>We have @Model.Count years posts, totally @Model.SelectMany(x=>x.Posts).Count()</p>
-    </div>
+<div class="text-center">
+    <h1 class="display-4">List of Archives</h1>
+    <p>We have @Model.Count years posts, totally @Model.SelectMany(x => x.Posts).Count()</p>
+</div>
 <div class="accordion accordion-flush">
     @foreach (var item in Model)
     {
@@ -20,7 +20,9 @@
                     <ul>
                         @foreach (var post in item.Posts)
                         {
-                            <li><a href="@post.GetFullLink()">@post.Metadata.Title</a></li>
+                            <li>
+                                <a href="@post.GetFullLink()">@post.Metadata.Title</a>
+                            </li>
                         }
                     </ul>
                 </div>

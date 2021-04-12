@@ -6,15 +6,14 @@ using Laobian.Blog.Models;
 using Laobian.Share.Blog.Model;
 using Laobian.Share.HttpService;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
 namespace Laobian.Blog.Controllers
 {
     public class TagController : Controller
     {
-        private readonly ICacheClient _cacheClient;
         private readonly ApiHttpService _apiHttpService;
+        private readonly ICacheClient _cacheClient;
         private readonly ILogger<TagController> _logger;
 
         public TagController(ICacheClient cacheClient, ApiHttpService apiHttpService, ILogger<TagController> logger)
@@ -51,7 +50,7 @@ namespace Laobian.Blog.Controllers
 
                     return result;
                 });
-            
+
             return View(viewModel);
         }
     }

@@ -40,12 +40,11 @@ namespace Laobian.Api
             var dpFolder = Configuration.GetValue<string>("DATA_PROTECTION_KEY_PATH");
             var sharedCookieName = Configuration.GetValue<string>("SHARED_COOKIE_NAME");
             Directory.CreateDirectory(dpFolder);
-            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(dpFolder)).SetApplicationName("LAOBIAN");
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(dpFolder))
+                .SetApplicationName("LAOBIAN");
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-                {
-                    options.Cookie.Name = sharedCookieName;
-                });
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme,
+                    options => { options.Cookie.Name = sharedCookieName; });
             services.AddControllers().AddJsonOptions(config =>
             {
                 var converter = new IsoDateTimeConverter();

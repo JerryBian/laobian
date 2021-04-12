@@ -216,6 +216,7 @@ namespace Laobian.Share.Blog.Service
                     {
                         blogTag.Metadata.Tags = blogTag.Tags.Select(x => x.Link).ToList();
                     }
+
                     return true;
                 }
                 finally
