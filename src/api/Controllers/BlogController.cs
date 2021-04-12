@@ -240,5 +240,23 @@ namespace Laobian.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
+
+        [HttpPut]
+        [Route("comment/{postLink}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<bool>> AddCommentAsync([FromRoute] string postLink, [FromBody] BlogCommentItem item)
+        {
+            try
+            {
+                var result = await _blogService.AddCommentAsync(postLink, item);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(AddCommentAsync)} failed.");
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
     }
 }

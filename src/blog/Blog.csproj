@@ -13,11 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <ProjectReference Include="..\share\Share.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\share\Share.csproj" />
+    <Folder Include="wwwroot\lib\" />
+    <Folder Include="wwwroot\script\" />
   </ItemGroup>
 
 </Project>

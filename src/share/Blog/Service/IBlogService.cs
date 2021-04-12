@@ -25,5 +25,7 @@ namespace Laobian.Share.Blog.Service
         Task<bool> UpdateBlogTagAsync(BlogTag tag);
 
         Task<bool> RemoveBlogTagAsync(string link);
+
+        Task<bool> AddCommentAsync(string postLink, BlogCommentItem item);
     }
 }

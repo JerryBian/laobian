@@ -101,6 +101,10 @@ namespace Laobian.Share.Blog.Service
                     if (comment != null)
                     {
                         post.Comment = comment;
+                        if (post.Comment.CommentItems == null)
+                        {
+                            post.Comment.CommentItems = new List<BlogCommentItem>();
+                        }
                     }
                     else
                     {
@@ -287,6 +291,48 @@ namespace Laobian.Share.Blog.Service
         {
             _manualResetEventSlim.Wait();
             return _allPosts.Select(x => x.Comment).ToList();
+        }
+
+        public async Task<bool> AddCommentAsync(string postLink, BlogCommentItem item)
+        {
+            try
+            {
+                await _semaphoreSlim.WaitAsync();
+                _manualResetEventSlim.Reset();
+                try
+                {
+                    var post = _allPosts.FirstOrDefault(x => StringUtil.EqualsIgnoreCase(x.Link, postLink));
+                    if (post == null)
+                    {
+                        return false;
+                    }
+
+                    if (post.Comment == null)
+                    {
+                        post.Comment = new BlogComment();
+                    }
+
+                    if (post.Comment.CommentItems == null)
+                    {
+                        post.Comment.CommentItems = new List<BlogCommentItem>();
+                    }
+
+                    item.Id = Guid.NewGuid();
+                    item.TimeStamp = DateTime.Now;
+                    
+                    // TODO: verify
+                    post.Comment.CommentItems.Add(item);
+                    return true;
+                }
+                finally
+                {
+                    _manualResetEventSlim.Set();
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
         }
 
         //public async Task<bool> AddBlogCommentItemAsync(BlogCommentItem commentItem)

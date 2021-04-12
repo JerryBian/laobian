@@ -7,6 +7,6 @@ namespace Laobian.Share.Blog.Model
     {
         [JsonPropertyName("l")] public string PostLink { get; set; }
 
-        [JsonPropertyName("c")] public List<BlogCommentItem> CommentItems { get; set; }
+        [JsonPropertyName("c")] public List<BlogCommentItem> CommentItems { get; set; } = new List<BlogCommentItem>();
     }
 }

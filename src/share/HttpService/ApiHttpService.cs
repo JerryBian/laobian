@@ -164,5 +164,20 @@ namespace Laobian.Share.HttpService
 
             return Convert.ToBoolean(content);
         }
+
+        public async Task<bool> AddCommentAsync(string postLink, BlogCommentItem comment)
+        {
+            var response = await _httpClient.PutAsync($"/blog/comment/{postLink}",
+                new StringContent(JsonUtil.Serialize(comment), Encoding.UTF8, MediaTypeNames.Application.Json));
+            var content = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.LogError(
+                    $"{nameof(ApiHttpService)}.{nameof(AddCommentAsync)} failed. Status: {response.StatusCode}. Content: {content}");
+                return false;
+            }
+
+            return Convert.ToBoolean(content);
+        }
     }
 }

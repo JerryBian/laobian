@@ -1,14 +1,14 @@
 ﻿@model Laobian.Share.Blog.Model.BlogPost
 <div>
     <h2>
-        <a href="@Model.GetFullLink()">@Model.Metadata.Title</a>
+        <a href="@Model.GetFullLink()" class="text-decoration-none">@Model.Metadata.Title</a>
     </h2>
     <div class="bg-light p-2">
-        <i class="bi bi-calendar-date"></i> <a href="#">@Model.GetPublishTimeString()</a>
+        <i class="bi bi-calendar-date"></i> <a href="#" class="text-decoration-none">@Model.GetPublishTimeString()</a>
         <i class="bi bi-tags"></i>
         @foreach (var tag in Model.Tags)
         {
-            <a href="@tag.Link">@tag.Name</a>
+            <a href="@tag.Link" class="text-decoration-none">@tag.Name</a>
         }
         <i class="bi bi-eye"></i> @Model.GetAccessCountString() 次阅读
         <i class="bi bi-chat-square-text"></i> @Model.GetCommentCount() 次评论
@@ -21,7 +21,7 @@
 
 <div>
     <p>@Model.GetCommentCount() 次评论 </p>
-    <hr/>
+    <hr />
     <ul class="list-group list-group-flush">
         @for (var i = 0; i < 10; i++)
         {
@@ -47,33 +47,120 @@
                             <i class="bi bi-reply"></i> <a href="#">回复</a>
                         </div>
                         <div>
-                            <i class="bi bi-chat-square-quote"></i> <a href="#">引用</a>
+                            <i class="bi bi-share"></i> <a href="#">链接</a>
+                        </div>
+                    </footer>
+                </div>
+            </li>
+        }
+
+        @foreach (var item in Model.Comment.CommentItems)
+        {
+            <li class="list-group-item d-flex" id="comment_item_@item.GetId()">
+                <div style="width: 100px; height: auto;" class="mx-3 d-flex flex-column justify-content-start align-items-center d-none d-sm-block">
+                    <div>
+                        <img src="https://discourse-cdn.codinghorror.com/user_avatar/discourse.codinghorror.com/chx1975/45/76610_2.png" alt="">
+                    </div>
+                    <div>
+                        <small>@item.Ip</small>
+                    </div>
+                </div>
+                <div>
+                    <header class="d-flex">
+                        <span>@item.UserName</span>
+                        <span class="ms-auto">@item.TimeStamp</span>
+                    </header>
+                    <article>
+                        @Html.Raw(item.GetHtmlContent())
+                    </article>
+                    <footer class="d-flex justify-content-start">
+                        <div class="me-3">
+                            <i class="bi bi-reply"></i> <a href="javascript:;">回复</a>
+                        </div>
+                        <div>
+                            <i class="bi bi-share"></i> <a href="@Model.GetFullLink()#comment_item_@item.GetId()">链接</a>
                         </div>
                     </footer>
                 </div>
             </li>
         }
     </ul>
-    <div>
+    <div id="comment_box">
         <form class="row g-3">
             <div class="col-md-6">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" placeholder="" autocomplete="off">
+                <label for="comment_box_name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="comment_box_name" placeholder="" autocomplete="off">
             </div>
             <div class="col-md-6">
-                <label for="emailAddr" class="form-label">Email address</label>
-                <input type="email" class="form-control" id="emailAddr" placeholder="name@example.com" autocomplete="off">
+                <label for="comment_box_email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="comment_box_email" placeholder="name@example.com" autocomplete="off">
             </div>
             <div class="col-12">
-                <label for="comment" class="form-label">Example textarea</label>
-                <textarea class="form-control" id="comment" rows="3"></textarea>
+                <label for="comment_box_text" class="form-label">Example textarea</label>
+                <textarea class="form-control" id="comment_box_text" rows="3"></textarea>
             </div>
             <div class="col-12">
-                <button type="submit" class="btn btn-primary">Sign in</button>
+                <button type="submit" class="btn btn-primary" id="comment_box_submit_btn">Sign in</button>
             </div>
         </form>
-        <article>
+        <article id="comment_box_preview">
             Preview...
         </article>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        let commentBox = document.querySelector("#comment_box");
+        let commentBoxName = document.querySelector("#comment_box_name");
+        let commentBoxEmail = document.querySelector("#comment_box_email");
+        let commentBoxText = document.querySelector("#comment_box_text");
+        let commentBoxSubmitButton = document.querySelector("#comment_box_submit_btn");
+        let commentBoxPreview = document.querySelector("#comment_box_preview");
+
+        commentBoxText.addEventListener("input",
+            function() {
+                let val = commentBoxText.value;
+                var html = marked(val);
+                commentBoxPreview.innerHTML = html;
+            },
+            false);
+
+        commentBoxSubmitButton.addEventListener("click",
+            function (e) {
+                e.preventDefault();
+                let name = commentBoxName.value;
+                let email = commentBoxEmail.value;
+                let text = commentBoxText.value;
+
+                if (name.length < 1 || email.length < 5 || text.length < 3) {
+                    return;
+                }
+
+                var obj = {
+                    u: name,
+                    e: email,
+                    md: text
+                };
+                fetch(`/api/comment?postLink=@Model.Link`,
+                        {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(obj)
+                        })
+                    .then(res => {
+                        if (!res.ok) {
+                            // add comment failed
+                            return;
+                        }
+
+                        window.location.reload(true);
+                    })
+                    .catch(err => console.log(err));
+            },
+            false);
+    </script>
+}

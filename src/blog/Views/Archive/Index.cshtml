@@ -21,7 +21,7 @@
                         @foreach (var post in item.Posts)
                         {
                             <li>
-                                <a href="@post.GetFullLink()">@post.Metadata.Title</a>
+                                <a href="@post.GetFullLink()" class="text-decoration-none">@post.Metadata.Title</a>
                             </li>
                         }
                     </ul>
