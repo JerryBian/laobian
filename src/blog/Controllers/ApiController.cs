@@ -21,7 +21,7 @@ namespace Laobian.Blog.Controllers
         {
             _logger.LogInformation($"PurgeCache <= {Request.HttpContext.Connection.RemoteIpAddress}");
             _logger.LogInformation($"PurgeCache <= {Request.HttpContext.Connection.LocalIpAddress}");
-            _logger.LogInformation($"PurgeCache <= {Request.Host.Value.StartsWith("localhost:")}");
+            _logger.LogInformation($"PurgeCache <= {Request.Host.Value}");
             GlobalFlag.HardRefreshAt = DateTime.Now;
             return Ok();
         }
