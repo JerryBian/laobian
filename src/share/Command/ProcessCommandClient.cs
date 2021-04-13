@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Laobian.Share.Setting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Laobian.Share.Command
@@ -10,9 +11,11 @@ namespace Laobian.Share.Command
     public class ProcessCommandClient : ICommandClient
     {
         private readonly ApiSetting _apiSetting;
+        private readonly ILogger<ProcessCommandClient> _logger;
 
-        public ProcessCommandClient(IOptions<ApiSetting> options)
+        public ProcessCommandClient(IOptions<ApiSetting> options, ILogger<ProcessCommandClient> logger)
         {
+            _logger = logger;
             _apiSetting = options.Value;
         }
 
@@ -32,6 +35,8 @@ namespace Laobian.Share.Command
                 RedirectStandardOutput = true,
                 UseShellExecute = false
             };
+
+            _logger.LogInformation($"FileName={startInfo.FileName}, Args={startInfo.Arguments}");
             process.StartInfo = startInfo;
 
             var output = new StringBuilder();
