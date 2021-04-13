@@ -23,6 +23,12 @@ namespace Laobian.Share.Blog.Model
 
         [JsonPropertyName("p")] public string Ip { get; set; }
 
+        [JsonPropertyName("ir")] public bool IsReviewed { get; set; }
+
+        [JsonPropertyName("ip")] public bool IsPublished { get; set; }
+
+        [JsonPropertyName("l")] public DateTime LastUpdatedAt { get; set; }
+
         public string GetHtmlContent()
         {
             if (_htmlDoc == null)

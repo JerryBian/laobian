@@ -3,13 +3,12 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Laobian.Share;
-using Laobian.Share.Blog.Model;
 using Laobian.Share.HttpService;
 using Laobian.Share.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace Laobian.Blog.Controllers
+namespace Laobian.Admin.Controllers
 {
     [ApiController]
     [Route("api")]
@@ -22,22 +21,6 @@ namespace Laobian.Blog.Controllers
         {
             _logger = logger;
             _apiHttpService = apiHttpService;
-        }
-
-        [HttpPost]
-        [Route("PurgeCache")]
-        public IActionResult PurgeCache()
-        {
-            var remoteAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-            var localAddress = Request.HttpContext.Connection.LocalIpAddress?.ToString();
-            var isLocal = IpUtil.IsLocal(remoteAddress, localAddress);
-            if (!isLocal)
-            {
-                return BadRequest();
-            }
-
-            GlobalFlag.HardRefreshAt = DateTime.Now;
-            return Ok();
         }
 
         [HttpPost]
@@ -66,22 +49,6 @@ namespace Laobian.Blog.Controllers
 
             _logger.LogInformation($"UpdateGitFileLogState finished. flag = {flag}");
             return Ok();
-        }
-
-        [HttpPost]
-        [Route("comment")]
-        public async Task<IActionResult> AddComment([FromBody] BlogCommentItem comment, [FromQuery] string postLink)
-        {
-            comment.IsAdmin = User.Identity?.IsAuthenticated ?? false;
-            comment.Ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-            var result = await _apiHttpService.AddCommentAsync(postLink, comment);
-            if (result)
-            {
-                GlobalFlag.HardRefreshAt = DateTime.Now;
-                return Ok();
-            }
-
-            return BadRequest();
         }
     }
 }

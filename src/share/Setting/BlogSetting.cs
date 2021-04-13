@@ -56,9 +56,6 @@
         [SettingConfig("POST_COMMENT_DIR_NAME", DefaultValue = "comment")]
         public string CommentDir { get; set; }
 
-        [SettingConfig("LOG_DIR_NAME", DefaultValue = "log")]
-        public string LogDir { get; set; }
-
         #endregion
     }
 }

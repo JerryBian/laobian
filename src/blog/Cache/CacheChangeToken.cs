@@ -1,4 +1,5 @@
 ﻿using System;
+using Laobian.Share;
 using Microsoft.Extensions.Primitives;
 
 namespace Laobian.Blog.Cache

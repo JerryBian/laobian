@@ -30,6 +30,9 @@ namespace Laobian.Share.Setting
         [SettingConfig("COMMAND_LINE_BEGIN_ARG", DefaultValue = "/C")]
         public string CommandLineBeginArg { get; set; }
 
+        [SettingConfig("COMMAND_LINE_ARG_QUOTE", DefaultValue = "\"")]
+        public string CommandLineArgQuote { get; set; }
+
         [SettingConfig("ENDPOINT_LOCAL_API")] public string ApiLocalEndpoint { get; set; }
 
         [SettingConfig("ENDPOINT_LOCAL_BLOG")] public string BlogLocalEndpoint { get; set; }
@@ -53,6 +56,9 @@ namespace Laobian.Share.Setting
 
         [SettingConfig("SHARED_COOKIE_NAME", IsRequired = true)]
         public string SharedCookieName { get; set; }
+
+        [SettingConfig("LOG_DIR_NAME", DefaultValue = "log")]
+        public string LogDir { get; set; }
 
         public void Setup(IConfiguration config)
         {

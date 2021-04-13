@@ -8,28 +8,18 @@ using Microsoft.Extensions.Options;
 
 namespace Laobian.Share.HttpService
 {
-    public class BlogHttpService
+    public class AdminHttpService
     {
         private readonly BlogSetting _blogSetting;
         private readonly HttpClient _httpClient;
         private readonly ILogger<BlogHttpService> _logger;
 
-        public BlogHttpService(HttpClient httpClient, IOptions<BlogSetting> setting, ILogger<BlogHttpService> logger)
+        public AdminHttpService(HttpClient httpClient, IOptions<BlogSetting> setting, ILogger<BlogHttpService> logger)
         {
             _logger = logger;
             _blogSetting = setting.Value;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_blogSetting.BlogLocalEndpoint);
-        }
-
-        public async Task PurgeCacheAsync()
-        {
-            var response = await _httpClient.PostAsync("/api/PurgeCache", new StringContent(string.Empty));
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogError(
-                    $"{nameof(ApiHttpService)}.{nameof(PurgeCacheAsync)} failed. Status: {response.StatusCode}. Content: {await response.Content.ReadAsStringAsync()}");
-            }
         }
 
         public async Task UpdatePullGitFileEventAsync(bool enable)
@@ -41,12 +31,12 @@ namespace Laobian.Share.HttpService
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError(
-                        $"{nameof(ApiHttpService)}.{nameof(UpdatePullGitFileEventAsync)} failed. Status: {response.StatusCode}. Content: {await response.Content.ReadAsStringAsync()}");
+                        $"{nameof(AdminHttpService)}.{nameof(UpdatePullGitFileEventAsync)} failed. Status: {response.StatusCode}. Content: {await response.Content.ReadAsStringAsync()}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{nameof(BlogHttpService)}.{nameof(UpdatePullGitFileEventAsync)} failed.");
+                _logger.LogError(ex, $"{nameof(AdminHttpService)}.{nameof(UpdatePullGitFileEventAsync)} failed.");
             }
         }
     }

@@ -38,7 +38,7 @@ namespace Laobian.Api.Controllers
             {
                 using var sr = new StreamReader(Request.Body, Encoding.UTF8);
                 var message = await sr.ReadToEndAsync();
-                await _blogService.FlushDataAsync();
+                await _blogService.FlushDataToFileAsync();
                 await _blogService.PushGitFilesAsync(message);
                 return Ok();
             }
@@ -245,7 +245,8 @@ namespace Laobian.Api.Controllers
         [Route("comment/{postLink}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<bool>> AddCommentAsync([FromRoute] string postLink, [FromBody] BlogCommentItem item)
+        public async Task<ActionResult<bool>> AddCommentAsync([FromRoute] string postLink,
+            [FromBody] BlogCommentItem item)
         {
             try
             {
@@ -255,6 +256,78 @@ namespace Laobian.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{nameof(AddCommentAsync)} failed.");
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("comments")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<List<BlogComment>>> GetCommentsAsync()
+        {
+            try
+            {
+                var result = await _blogService.GetCommentsAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(GetCommentsAsync)} failed.");
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("comment/{postLink}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<List<BlogComment>>> GetCommentAsync([FromRoute] string postLink)
+        {
+            try
+            {
+                var result = await _blogService.GetCommentAsync(postLink);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(GetCommentAsync)} failed.");
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("comment/item/{commentId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<List<BlogComment>>> GetCommentItemAsync([FromRoute] Guid commentId)
+        {
+            try
+            {
+                var result = await _blogService.GetCommentItemAsync(commentId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(GetCommentItemAsync)} failed.");
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("comment")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<List<BlogComment>>> UpdateCommentAsync([FromBody] BlogCommentItem comment)
+        {
+            try
+            {
+                var result = await _blogService.UpdateCommentAsync(comment);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(GetCommentItemAsync)} failed.");
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }

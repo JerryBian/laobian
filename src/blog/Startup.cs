@@ -1,9 +1,12 @@
+using System;
 using System.IO;
+using System.Threading;
 using Laobian.Blog.Cache;
 using Laobian.Share.Blog.Repository;
 using Laobian.Share.Command;
 using Laobian.Share.Converter;
 using Laobian.Share.HttpService;
+using Laobian.Share.Log;
 using Laobian.Share.Setting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +15,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Laobian.Blog
 {
@@ -38,6 +42,28 @@ namespace Laobian.Blog
             services.AddSingleton<IBlogReadWriteRepository, BlogDbRepository>();
 
             services.AddHttpClient<ApiHttpService>();
+
+            if (_env.IsDevelopment())
+            {
+                // give API service few seconds
+                Thread.Sleep(TimeSpan.FromSeconds(10));
+            }
+
+            services.AddLogging(config =>
+            {
+                config.SetMinimumLevel(LogLevel.Debug);
+                config.AddDebug();
+                config.AddConsole();
+                config.AddSystemdConsole();
+                config.AddGitFile(c =>
+                {
+                    var logDir = Path.Combine(Configuration.GetValue<string>("GITHUB_READ_WRITE_REPO_LOCAL_DIR"),
+                        Configuration.GetValue<string>("LOG_DIR_NAME"));
+                    c.LoggerDir = logDir;
+                    c.LoggerName = "Laobian Blog";
+                    c.MinLevel = _env.IsProduction() ? LogLevel.Warning : LogLevel.Information;
+                });
+            });
 
             var dpFolder = Configuration.GetValue<string>("DATA_PROTECTION_KEY_PATH");
             var sharedCookieName = Configuration.GetValue<string>("SHARED_COOKIE_NAME");

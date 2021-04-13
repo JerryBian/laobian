@@ -1,9 +1,12 @@
 using System.IO;
+using System.Threading.Tasks;
 using Laobian.Api.HostedServices;
 using Laobian.Share.Blog.Repository;
 using Laobian.Share.Blog.Service;
 using Laobian.Share.Command;
 using Laobian.Share.Converter;
+using Laobian.Share.HttpService;
+using Laobian.Share.Log;
 using Laobian.Share.Setting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -12,14 +15,18 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 namespace Laobian.Api
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment _env;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
+            _env = env;
             Configuration = configuration;
         }
 
@@ -36,7 +43,25 @@ namespace Laobian.Api
             services.AddSingleton<IBlogReadonlyRepository, BlogPostRepository>();
             services.AddSingleton<IBlogReadWriteRepository, BlogDbRepository>();
 
-            services.AddHostedService<BlogHostedService>();
+            services.AddHostedService<ApiHostedService>();
+            services.AddHttpClient<BlogHttpService>();
+            services.AddHttpClient<AdminHttpService>();
+
+            services.AddLogging(config =>
+            {
+                config.SetMinimumLevel(LogLevel.Debug);
+                config.AddDebug();
+                config.AddConsole();
+                config.AddSystemdConsole();
+                config.AddGitFile(c =>
+                {
+                    var logDir = Path.Combine(Configuration.GetValue<string>("GITHUB_READ_WRITE_REPO_LOCAL_DIR"),
+                        Configuration.GetValue<string>("LOG_DIR_NAME"));
+                    c.LoggerDir = logDir;
+                    c.LoggerName = "Laobian Api";
+                    c.MinLevel = _env.IsProduction() ? LogLevel.Warning : LogLevel.Information;
+                });
+            });
             var dpFolder = Configuration.GetValue<string>("DATA_PROTECTION_KEY_PATH");
             var sharedCookieName = Configuration.GetValue<string>("SHARED_COOKIE_NAME");
             Directory.CreateDirectory(dpFolder);
@@ -54,9 +79,38 @@ namespace Laobian.Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime appLifetime)
         {
-            if (env.IsDevelopment())
+            //var blogHttpService = app.ApplicationServices.GetService<BlogHttpService>();
+            //var adminHttpService = app.ApplicationServices.GetService<AdminHttpService>();
+            
+            //appLifetime.ApplicationStarted.Register(async () =>
+            //{
+            //    if (blogHttpService != null)
+            //    {
+            //        await blogHttpService.UpdatePullGitFileEventAsync(true);
+            //    }
+
+            //    if (adminHttpService != null)
+            //    {
+            //        await adminHttpService.UpdatePullGitFileEventAsync(true);
+            //    }
+            //});
+
+            //appLifetime.ApplicationStopping.Register(async () =>
+            //{
+            //    if (blogHttpService != null)
+            //    {
+            //        await blogHttpService.UpdatePullGitFileEventAsync(false);
+            //    }
+
+            //    if (adminHttpService != null)
+            //    {
+            //        await adminHttpService.UpdatePullGitFileEventAsync(false);
+            //    }
+            //});
+
+            if (_env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();

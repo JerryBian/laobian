@@ -1,0 +1,162 @@
+﻿@using Laobian.Share.Setting
+@using Microsoft.Extensions.Options
+@model List<Laobian.Admin.Models.CommentsViewModel>
+@inject IOptions<AdminSetting> Setting
+<div>
+    <table class="table caption-top">
+        <caption>Total blog comments: @Model.Count()</caption>
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Timestamp</th>
+            <th scope="col">Post</th>
+            <th scope="col">Published</th>
+            <th scope="col">Reviewed</th>
+            <th scope="col">User Name</th>
+            <th scope="col">IP Address</th>
+            <th scope="col">Operation</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <th>@item.Comment.TimeStamp</th>
+                <th>
+                    <a href="/blog/comments?postLink=@item.Post.Link">@item.Post.Metadata.Title</a>
+                </th>
+                <th>
+                    <a href="/blog/comments?isPublished=@item.Comment.IsPublished">@item.Comment.IsPublished</a>
+                </th>
+                <th>
+                    <a href="/blog/comments?isReviewed=@item.Comment.IsReviewed">@item.Comment.IsReviewed</a>
+                </th>
+                <th>
+                    <a href="/blog/comments?userName=@item.Comment.UserName">@item.Comment.UserName</a>
+                </th>
+                <th>
+                    <a href="/blog/comments?ip=@item.Comment.Ip">@item.Comment.Ip</a>
+                </th>
+                <th>
+                    <a href="@Setting.Value.BlogRemoteEndpoint@item.Post.GetFullLink()#comment_item_@item.Comment.GetId()">Link</a> &middot;
+                    <a href="javascript:;" onclick="launchEditCommentModal('@item.Comment.Id')">Edit</a>
+                </th>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" tabindex="-1" id="commentMetadataModal" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Comment: <span id="commentId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <input type="hidden" value="" id="modalBodyId"/>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="modalBodyUserName" class="form-label">User Name</label>
+                    <input type="text" class="form-control" id="modalBodyUserName" placeholder="">
+                </div>
+                <div class="mb-3">
+                    <label for="modalBodyEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="modalBodyEmail" placeholder="">
+                </div>
+                <div class="mb-3">
+                    <label for="modalBodyIp" class="form-label">IP Address</label>
+                    <input type="text" class="form-control" id="modalBodyIp" placeholder="">
+                </div>
+                <div class="mb-3">
+                    <label for="modalBodyContent" class="form-label">Content</label>
+                    <textarea class="form-control" id="modalBodyContent" rows="3"></textarea>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="modalBodyIsPublished">
+                    <label class="form-check-label" for="modalBodyIsPublished">Is Published</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="modalBodyIsReviewed">
+                    <label class="form-check-label" for="modalBodyIsReviewed">Is Reviewed</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="modalBodyIsAdmin">
+                    <label class="form-check-label" for="modalBodyIsAdmin">Is Admin</label>
+                </div>
+                <div class="mb-3">
+                    <label for="modalBodyTimestamp" class="form-label">Publish Time</label>
+                    <input type="datetime-local" class="form-control" id="modalBodyTimestamp">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveComment()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        let modalDiv = document.querySelector('#commentMetadataModal');
+        let modal = new bootstrap.Modal(modalDiv, {});
+        let userName = document.querySelector('#modalBodyUserName');
+        let email = document.querySelector('#modalBodyEmail');
+        let ip = document.querySelector('#modalBodyIp');
+        let content = document.querySelector('#modalBodyContent');
+        let isPublished = document.querySelector('#modalBodyIsPublished');
+        let isReviewed = document.querySelector('#modalBodyIsReviewed');
+        let isAdmin = document.querySelector('#modalBodyIsAdmin');
+        let timestamp = document.querySelector('#modalBodyTimestamp');
+        let commentId = document.querySelector("#modalBodyId");
+
+        function launchEditCommentModal(id) {
+            fetch(`/blog/comment/item/${id}`)
+                .then(response => response.json())
+                .then(c => {
+                    userName.value = c.u;
+                    email.value = c.e;
+                    ip.value = c.p;
+                    content.value = c.md;
+                    isPublished.checked = c.ip;
+                    isReviewed.checked = c.ir;
+                    isAdmin.checked = c.a;
+                    timestamp.value = c.t;
+                    commentId.value = c.i;
+
+                    modal.show();
+                })
+                .catch(err => {});
+        }
+
+        function saveComment() {
+            let comment = {
+                u: userName.value,
+                e: email.value,
+                p: ip.value,
+                md: content.value,
+                ip: isPublished.checked,
+                ir: isReviewed.checked,
+                a: isAdmin.checked,
+                t: timestamp.value,
+                i: commentId.value
+            };
+
+            fetch('/blog/comment',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(comment)
+                    })
+                .then(response => {
+                    if (response.ok) {
+                        modal.hide();
+                        window.location.reload(true);
+                    }
+                })
+                .catch(err => {});
+        }
+    </script>
+}

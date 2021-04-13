@@ -179,5 +179,62 @@ namespace Laobian.Share.HttpService
 
             return Convert.ToBoolean(content);
         }
+
+        public async Task<List<BlogComment>> GetCommentsAsync()
+        {
+            var response = await _httpClient.GetAsync("/blog/comments");
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.LogError(
+                    $"{nameof(ApiHttpService)}.{nameof(GetCommentsAsync)} failed. Status: {response.StatusCode}. Content: {await response.Content.ReadAsStringAsync()}");
+                return new List<BlogComment>();
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            return await JsonUtil.DeserializeAsync<List<BlogComment>>(stream);
+        }
+
+        public async Task<BlogComment> GetCommentAsync(string postLink)
+        {
+            var response = await _httpClient.GetAsync($"/blog/comment/{postLink}");
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.LogError(
+                    $"{nameof(ApiHttpService)}.{nameof(GetCommentAsync)} failed. Status: {response.StatusCode}. Content: {await response.Content.ReadAsStringAsync()}");
+                return null;
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            return await JsonUtil.DeserializeAsync<BlogComment>(stream);
+        }
+
+        public async Task<BlogCommentItem> GetCommentItemAsync(Guid id)
+        {
+            var response = await _httpClient.GetAsync($"/blog/comment/item/{id}");
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.LogError(
+                    $"{nameof(ApiHttpService)}.{nameof(GetCommentItemAsync)} failed. Status: {response.StatusCode}. Content: {await response.Content.ReadAsStringAsync()}");
+                return null;
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            return await JsonUtil.DeserializeAsync<BlogCommentItem>(stream);
+        }
+
+        public async Task<bool> UpdateCommentAsync(BlogCommentItem comment)
+        {
+            var response = await _httpClient.PostAsync("/blog/comment",
+                new StringContent(JsonUtil.Serialize(comment), Encoding.UTF8, MediaTypeNames.Application.Json));
+            var content = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.LogError(
+                    $"{nameof(ApiHttpService)}.{nameof(UpdateCommentAsync)} failed. Status: {response.StatusCode}. Content: {content}");
+                return false;
+            }
+
+            return Convert.ToBoolean(content);
+        }
     }
 }

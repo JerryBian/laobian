@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Laobian.Share.Blog.Model;
 
@@ -6,9 +7,9 @@ namespace Laobian.Share.Blog.Service
 {
     public interface IBlogService
     {
-        Task FlushDataAsync();
+        Task FlushDataToFileAsync();
 
-        Task<bool> ReloadAsync();
+        Task<bool> InitDataFromFileAsync();
 
         List<BlogPost> GetAllPosts();
 
@@ -27,5 +28,13 @@ namespace Laobian.Share.Blog.Service
         Task<bool> RemoveBlogTagAsync(string link);
 
         Task<bool> AddCommentAsync(string postLink, BlogCommentItem item);
+
+        Task<bool> UpdateCommentAsync(BlogCommentItem comment);
+
+        Task<BlogComment> GetCommentAsync(string postLink);
+
+        Task<List<BlogComment>> GetCommentsAsync();
+
+        Task<BlogCommentItem> GetCommentItemAsync(Guid id);
     }
 }

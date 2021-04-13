@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Laobian.Share.Blog.Model;
 using Laobian.Share.Blog.Repository;
 using Laobian.Share.Extension;
+using Laobian.Share.HttpService;
 using Laobian.Share.Util;
 using Microsoft.Extensions.Logging;
 
@@ -40,8 +41,9 @@ namespace Laobian.Share.Blog.Service
 
         public async Task PullGitFilesAsync()
         {
-            var tasks = new List<Task> {_blogReadWriteRepository.PullAsync(), _blogReadonlyRepository.PullAsync()};
+            var tasks = new List<Task> { _blogReadWriteRepository.PullAsync(), _blogReadonlyRepository.PullAsync() };
             await Task.WhenAll(tasks);
+            _logger.LogInformation("Pull git files completed.");
         }
 
         public async Task PushGitFilesAsync(string commitMessage)
@@ -49,7 +51,7 @@ namespace Laobian.Share.Blog.Service
             await _blogReadWriteRepository.PushAsync(commitMessage);
         }
 
-        public async Task FlushDataAsync()
+        public async Task FlushDataToFileAsync()
         {
             await _blogReadWriteRepository.UpdatePostMetadataAsync(_allPosts.Select(x => x.Metadata).ToList());
             await _blogReadWriteRepository.UpdateAccessAsync(_allPosts.Select(x => x.Access).ToList());
@@ -57,7 +59,7 @@ namespace Laobian.Share.Blog.Service
             await _blogReadWriteRepository.UpdateTagsAsync(_allTags);
         }
 
-        public async Task<bool> ReloadAsync()
+        public async Task<bool> InitDataFromFileAsync()
         {
             _manualResetEventSlim.Reset();
             try
@@ -114,6 +116,7 @@ namespace Laobian.Share.Blog.Service
                     post.Tags = _allTags.Where(x => post.Metadata.Tags.ContainsIgnoreCase(x.Link)).ToList();
                 }
 
+                _logger.LogInformation("Init data from git files finished");
                 return true;
             }
             finally
@@ -275,24 +278,6 @@ namespace Laobian.Share.Blog.Service
             return _allTags;
         }
 
-        public List<BlogPostMetadata> GetAllPostMetadata()
-        {
-            _manualResetEventSlim.Wait();
-            return _allPosts.Select(x => x.Metadata).ToList();
-        }
-
-        public List<BlogAccess> GetAllAccess()
-        {
-            _manualResetEventSlim.Wait();
-            return _allPosts.Select(x => x.Access).ToList();
-        }
-
-        public List<BlogComment> GetAllComments()
-        {
-            _manualResetEventSlim.Wait();
-            return _allPosts.Select(x => x.Comment).ToList();
-        }
-
         public async Task<bool> AddCommentAsync(string postLink, BlogCommentItem item)
         {
             try
@@ -319,7 +304,8 @@ namespace Laobian.Share.Blog.Service
 
                     item.Id = Guid.NewGuid();
                     item.TimeStamp = DateTime.Now;
-                    
+                    item.LastUpdatedAt = DateTime.Now;
+
                     // TODO: verify
                     post.Comment.CommentItems.Add(item);
                     return true;
@@ -333,6 +319,125 @@ namespace Laobian.Share.Blog.Service
             {
                 _semaphoreSlim.Release();
             }
+        }
+
+        public async Task<List<BlogComment>> GetCommentsAsync()
+        {
+            try
+            {
+                await _semaphoreSlim.WaitAsync();
+                _manualResetEventSlim.Reset();
+                try
+                {
+                    return _allPosts.Select(x => x.Comment).ToList();
+                }
+                finally
+                {
+                    _manualResetEventSlim.Set();
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        public async Task<BlogComment> GetCommentAsync(string postLink)
+        {
+            try
+            {
+                await _semaphoreSlim.WaitAsync();
+                _manualResetEventSlim.Reset();
+                try
+                {
+                    var post = _allPosts.FirstOrDefault(x => StringUtil.EqualsIgnoreCase(x.Link, postLink));
+                    return post?.Comment;
+                }
+                finally
+                {
+                    _manualResetEventSlim.Set();
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        public async Task<BlogCommentItem> GetCommentItemAsync(Guid id)
+        {
+            try
+            {
+                await _semaphoreSlim.WaitAsync();
+                _manualResetEventSlim.Reset();
+                try
+                {
+                    var post = _allPosts.SelectMany(x => x.Comment.CommentItems);
+                    return post.FirstOrDefault(x => x.Id == id);
+                }
+                finally
+                {
+                    _manualResetEventSlim.Set();
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        public async Task<bool> UpdateCommentAsync(BlogCommentItem comment)
+        {
+            try
+            {
+                await _semaphoreSlim.WaitAsync();
+                _manualResetEventSlim.Reset();
+                try
+                {
+                    var item = _allPosts.SelectMany(x => x.Comment.CommentItems)
+                        .FirstOrDefault(x => comment.Id == x.Id);
+                    if (item == null)
+                    {
+                        return false;
+                    }
+
+                    item.Email = comment.Email;
+                    item.Ip = comment.Ip;
+                    item.IsAdmin = comment.IsAdmin;
+                    item.IsPublished = comment.IsPublished;
+                    item.IsReviewed = comment.IsReviewed;
+                    item.MarkdownContent = comment.MarkdownContent;
+                    item.LastUpdatedAt = DateTime.Now;
+                    item.UserName = comment.UserName;
+                    return true;
+                }
+                finally
+                {
+                    _manualResetEventSlim.Set();
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        public List<BlogPostMetadata> GetAllPostMetadata()
+        {
+            _manualResetEventSlim.Wait();
+            return _allPosts.Select(x => x.Metadata).ToList();
+        }
+
+        public List<BlogAccess> GetAllAccess()
+        {
+            _manualResetEventSlim.Wait();
+            return _allPosts.Select(x => x.Access).ToList();
+        }
+
+        public List<BlogComment> GetAllComments()
+        {
+            _manualResetEventSlim.Wait();
+            return _allPosts.Select(x => x.Comment).ToList();
         }
 
         //public async Task<bool> AddBlogCommentItemAsync(BlogCommentItem commentItem)

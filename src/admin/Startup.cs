@@ -4,6 +4,7 @@ using Laobian.Share.Blog.Repository;
 using Laobian.Share.Command;
 using Laobian.Share.Converter;
 using Laobian.Share.HttpService;
+using Laobian.Share.Log;
 using Laobian.Share.Setting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Laobian.Admin
 {
@@ -42,6 +44,22 @@ namespace Laobian.Admin
 
             services.AddHttpClient<ApiHttpService>();
             services.AddHttpClient<BlogHttpService>();
+
+            services.AddLogging(config =>
+            {
+                config.SetMinimumLevel(LogLevel.Debug);
+                config.AddDebug();
+                config.AddConsole();
+                config.AddSystemdConsole();
+                config.AddGitFile(c =>
+                {
+                    var logDir = Path.Combine(Configuration.GetValue<string>("GITHUB_READ_WRITE_REPO_LOCAL_DIR"),
+                        Configuration.GetValue<string>("LOG_DIR_NAME"));
+                    c.LoggerDir = logDir;
+                    c.LoggerName = "Laobian Admin";
+                    c.MinLevel = _env.IsProduction() ? LogLevel.Warning : LogLevel.Information;
+                });
+            });
 
             var dpFolder = Configuration.GetValue<string>("DATA_PROTECTION_KEY_PATH");
             var sharedCookieName = Configuration.GetValue<string>("SHARED_COOKIE_NAME");

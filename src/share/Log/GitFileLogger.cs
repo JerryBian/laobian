@@ -37,6 +37,7 @@ namespace Laobian.Share.Log
                 log.Message = formatter(state, exception);
                 log.Exception = exception;
                 log.Level = logLevel;
+                log.TimeStamp = DateTime.Now;
                 _queueProcessor.Add(log);
             }
             catch (Exception)
