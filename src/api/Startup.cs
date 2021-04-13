@@ -51,7 +51,7 @@ namespace Laobian.Api
             {
                 config.SetMinimumLevel(LogLevel.Debug);
                 config.AddDebug();
-                config.AddConsole();
+                config.AddSimpleConsole();
                 config.AddSystemdConsole();
                 config.AddGitFile(c =>
                 {

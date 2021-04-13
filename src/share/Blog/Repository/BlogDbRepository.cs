@@ -50,6 +50,7 @@ namespace Laobian.Share.Blog.Repository
             commands.Add($"git config --local user.email \"{_setting.GitHubReadWriteRepoCommitEmail}\"");
             var command =
                 $"{_setting.CommandLineArgQuote}{string.Join(" && ", commands)}{_setting.CommandLineArgQuote}";
+            command = $"\"{string.Join(" && ", commands).Replace("\"", "\\\"")}\""; 
             var output = await _commandClient.RunAsync(command);
             _logger.LogInformation($"cmd: {command}{Environment.NewLine}Output: {output}");
         }

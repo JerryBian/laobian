@@ -31,15 +31,10 @@ namespace Laobian.Share.Command
                 CreateNoWindow = true,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                Arguments = string.IsNullOrEmpty(_apiSetting.CommandLineBeginArg) ? command : $"-c {command}"
             };
 
-            if (!string.IsNullOrEmpty(_apiSetting.CommandLineBeginArg))
-            {
-                startInfo.ArgumentList.Add(_apiSetting.CommandLineBeginArg);
-            }
-
-            startInfo.ArgumentList.Add(command);
 
             _logger.LogInformation($"FileName={startInfo.FileName}, Args={startInfo.Arguments}");
             process.StartInfo = startInfo;
