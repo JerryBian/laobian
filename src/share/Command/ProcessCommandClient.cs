@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,14 +28,18 @@ namespace Laobian.Share.Command
             var startInfo = new ProcessStartInfo
             {
                 FileName = _apiSetting.CommandLineName,
-                Arguments = string.IsNullOrEmpty(_apiSetting.CommandLineBeginArg)
-                    ? command
-                    : $"{_apiSetting.CommandLineBeginArg} {command}",
                 CreateNoWindow = true,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false
             };
+
+            if (!string.IsNullOrEmpty(_apiSetting.CommandLineBeginArg))
+            {
+                startInfo.ArgumentList.Add(_apiSetting.CommandLineBeginArg);
+            }
+
+            startInfo.ArgumentList.Add(command);
 
             _logger.LogInformation($"FileName={startInfo.FileName}, Args={startInfo.Arguments}");
             process.StartInfo = startInfo;
