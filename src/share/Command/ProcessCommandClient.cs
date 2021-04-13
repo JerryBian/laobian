@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,9 +33,8 @@ namespace Laobian.Share.Command
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
-                Arguments = string.IsNullOrEmpty(_apiSetting.CommandLineBeginArg) ? command : $"-c {command}"
+                Arguments = string.IsNullOrEmpty(_apiSetting.CommandLineBeginArg) ? FormatCommand(command) : $"{_apiSetting.CommandLineBeginArg} {FormatCommand(command)}"
             };
-
 
             _logger.LogInformation($"FileName={startInfo.FileName}, Args={startInfo.Arguments}");
             process.StartInfo = startInfo;
@@ -62,6 +62,11 @@ namespace Laobian.Share.Command
             resetEvent1.Wait();
             resetEvent2.Wait();
             return output.ToString();
+        }
+
+        private string FormatCommand(string cmd)
+        {
+            return $"\"{cmd.Replace("\"", "\\\"")}\"";
         }
     }
 }
