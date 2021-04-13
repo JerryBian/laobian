@@ -41,7 +41,7 @@ namespace Laobian.Share.Blog.Repository
             var repoUrl =
                 $"https://{_blogSetting.GitHubReadonlyRepoApiToken}@github.com/{_blogSetting.GitHubReadonlyRepoOwner}/{_blogSetting.GitHubReadonlyRepoName}.git";
             var command =
-                $"\"git clone -b {_blogSetting.GitHubReadonlyRepoBranch} --single-branch {repoUrl} {_blogSetting.GitHubReadonlyRepoLocalDir}\"";
+                $"{_blogSetting.CommandLineArgQuote}git clone -b {_blogSetting.GitHubReadonlyRepoBranch} --single-branch {repoUrl} {_blogSetting.GitHubReadonlyRepoLocalDir}{_blogSetting.CommandLineArgQuote}";
             var output = await _commandClient.RunAsync(command);
             _logger.LogInformation($"cmd: {command}{Environment.NewLine}Output: {output}");
         }
